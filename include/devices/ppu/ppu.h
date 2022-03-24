@@ -76,6 +76,8 @@ public:
 
     uint8_t get_data_register ();
 
+    uint8_t get_status_register ();
+
     void    clock ();
 
     int     current_cycle = 0;
@@ -83,6 +85,8 @@ public:
 
     int     scanline = 0;
     int     scancolumn = 0;
+
+    uint8_t previous_data;
 
     SDL_Renderer *renderer = nullptr;
     int          x_offset  = 0;
