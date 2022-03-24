@@ -60,6 +60,18 @@ public:
         F_BACKGROUND_COLOR_THREE = 7,
     };
 
+    enum STATUS_FLAG
+    {
+        F_LAST_WRITE_BIT_ONE   = 0,
+        F_LAST_WRITE_BIT_TWO   = 1,
+        F_LAST_WRITE_BIT_THREE = 2,
+        F_LAST_WRITE_BIT_FOUR  = 3,
+        F_LAST_WRITE_BIT_FIVE  = 4,
+        F_SPRITE_OVERFLOW      = 5,
+        F_SPRITE_ZERO_HIT      = 6,
+        F_VBLANK_STARTED       = 7
+    };
+
     void    set_destination_address (uint8_t data);
 
     uint8_t get_data_register ();
@@ -92,6 +104,8 @@ public:
     uint8_t  set_mask_flag (MASK_FLAG flag, uint8_t value);
 
     uint8_t  get_mask_flag (MASK_FLAG flag);
+
+    uint8_t  get_status_flag (STATUS_FLAG flag);
 };
 
 #endif //NEMULATOR_PPU_H

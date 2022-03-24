@@ -114,6 +114,11 @@ uint8_t ppu::get_mask_flag (ppu::MASK_FLAG flag)
     return (((this -> mask_register) >> flag) & 1);
 }
 
+uint8_t ppu::get_status_flag (ppu::STATUS_FLAG flag)
+{
+    return (((this -> status_register) >> flag) & 1);
+}
+
 void ppu::set_destination_address (uint8_t data)
 {
     if (this -> destination_address_low_byte)
