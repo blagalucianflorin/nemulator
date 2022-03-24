@@ -109,6 +109,8 @@ public:
 
     uint8_t  get_mask_flag (MASK_FLAG flag);
 
+    uint8_t  set_status_flag (STATUS_FLAG flag, uint8_t value);
+
     uint8_t  get_status_flag (STATUS_FLAG flag);
 };
 

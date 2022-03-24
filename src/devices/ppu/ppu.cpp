@@ -114,6 +114,16 @@ uint8_t ppu::get_mask_flag (ppu::MASK_FLAG flag)
     return (((this -> mask_register) >> flag) & 1);
 }
 
+uint8_t ppu::set_status_flag (ppu::STATUS_FLAG flag, uint8_t value)
+{
+    value = value ? 1 : 0;
+
+    if (this -> get_status_flag (flag) != value)
+        this -> status_register ^= 1 << flag;
+
+    return (this -> status_register);
+}
+
 uint8_t ppu::get_status_flag (ppu::STATUS_FLAG flag)
 {
     return (((this -> status_register) >> flag) & 1);
@@ -146,7 +156,7 @@ uint8_t ppu::get_status_register ()
 {
     uint8_t result = ((this -> status_register & 0b11100000) | (this -> previous_data & 0b00011111));
 
-    this -> status_register &= 0b01111111;
+    this -> set_status_flag (STATUS_FLAG::F_VBLANK_STARTED, 0);
 
     return (result);
 }
@@ -170,10 +180,12 @@ void    ppu::clock ()
         (this -> scanline)++;
         if (this -> scanline == 262)
         {
+            this -> set_status_flag (STATUS_FLAG::F_VBLANK_STARTED, 0);
             this -> scanline = 0;
         }
         else if (this -> scanline == 240 && this -> get_control_flag (ppu::F_NMI_ON_VBLANK))
         {
+            this -> set_status_flag (STATUS_FLAG::F_VBLANK_STARTED, 1);
             cpu -> interrupt (true);
         }
     }
