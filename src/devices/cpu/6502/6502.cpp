@@ -128,4 +128,6 @@ void cpu::interrupt (bool force)
 
     this -> program_counter = this -> parent_bus ->read (address) |
                              (this -> parent_bus ->read (address + 1) << 8);
+    
+    this -> cycles_left += (force ? 8 : 7);
 }
