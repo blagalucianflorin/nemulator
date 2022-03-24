@@ -158,9 +158,9 @@ void ppu::clock ()
         {
             this -> scanline = 0;
         }
-        else if (this -> scanline == 240)
+        else if (this -> scanline == 240 && this -> get_control_flag (ppu::F_NMI_ON_VBLANK))
         {
-            cpu -> force_interrupt ();
+            cpu -> interrupt (true);
         }
     }
 }

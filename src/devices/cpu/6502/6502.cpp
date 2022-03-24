@@ -111,6 +111,21 @@ void cpu::step ()
     }
 }
 
-void cpu::force_interrupt () {}
+void cpu::interrupt (bool force)
+{
+    if (!force && !(this ->get_flag (cpu::F_INTERRUPT_DISABLE)))
+        return;
 
-void cpu::interrupt () {}
+    this -> step ();
+
+    this -> push_to_stack (this -> program_counter & 0x00FF);
+    this -> push_to_stack ((this -> program_counter & 0xFF00) >> 8);
+    this -> push_to_stack (this -> flags_register);
+
+    this -> set_flag (cpu::F_INTERRUPT_DISABLE, 1);
+
+    uint16_t address = (force ? 0xFFFA : 0xFFFE);
+
+    this -> program_counter = this -> parent_bus ->read (address) |
+                             (this -> parent_bus ->read (address + 1) << 8);
+}

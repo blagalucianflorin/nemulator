@@ -103,10 +103,7 @@ public:
 
     void    step ();
 
-    //  TODO Implement both types of interrupts
-    void    interrupt ();
-
-    void    force_interrupt ();
+    void    interrupt (bool force);
 };
 
 #endif //NEMULATOR_CPU_H
