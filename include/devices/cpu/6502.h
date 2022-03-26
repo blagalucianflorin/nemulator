@@ -30,8 +30,8 @@ private:
     uint8_t  stack_pointer   = 0xFF;
 
     // Record cycles left for current operation
-    uint8_t  cycles_left    = 0;
-    int      cycles_elapsed = 0;
+    long     cycles_left    = 0;
+    long     cycles_elapsed = 0;
 
     // Operations
     struct  operation
@@ -104,6 +104,11 @@ public:
     void    step ();
 
     void    interrupt (bool force);
+
+    void    wait (long cycles);
+
+
+    inline long get_cycles_elapsed () { return (this -> cycles_elapsed); }
 };
 
 #endif //NEMULATOR_CPU_H

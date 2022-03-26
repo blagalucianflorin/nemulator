@@ -131,3 +131,8 @@ void cpu::interrupt (bool force)
     
     this -> cycles_left += (force ? 8 : 7);
 }
+
+void cpu::wait (long cycles)
+{
+    this -> cycles_left += cycles;
+}
