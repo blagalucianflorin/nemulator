@@ -15,6 +15,7 @@
 #include "include/devices/ppu/ppu.h"
 #include "include/devices/cartridges/cartridge.h"
 #include "debugging/6502debugger.h"
+#include "include/devices/ppu/oam.h"
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
@@ -64,16 +65,22 @@ int main (int argc, char **argv)
     auto nes_cpu               = new cpu ();
     auto nes_cpu_ram           = new ram ();
     auto nes_ppu_bus           = new bus (0x0000, 0x3FFF);
-    auto nes_ppu               = new ppu (renderer, nes_cpu, 810, 10);
+    auto nes_ppu_oam           = new oam ();
+    auto nes_ppu               = new ppu(renderer);
     auto nes_ppu_nametable_ram = new ppu_nametable_ram ();
     auto nes_ppu_palette_ram   = new ppu_palette_ram ();
     auto nes_cpu_cartridge     = new cartridge ("../testing/devices/cartridges/roms/ines/trainer_content.ines");
     auto nes_ppu_cartridge     = new cartridge ("../testing/devices/cartridges/roms/ines/trainer_content.ines");
 
+    nes_ppu -> attach (nes_cpu);
+    nes_ppu -> attach (nes_ppu_oam);
+    nes_ppu_oam -> attach (nes_cpu);
+    nes_ppu_oam -> attach (nes_ppu);
     nes_cpu_bus -> add_device (nes_cpu);
     nes_cpu_bus -> add_device (nes_cpu_ram);
     nes_cpu_bus -> add_device (nes_cpu_cartridge);
     nes_cpu_bus -> add_device (nes_ppu);
+    nes_cpu_bus -> add_device (nes_ppu_oam);
     nes_ppu_cartridge -> set_lower_bound (0x0000);
     nes_ppu_cartridge -> set_upper_bound (0x1FFF);
     nes_ppu_bus -> add_device (nes_ppu_cartridge);
@@ -89,6 +96,8 @@ int main (int argc, char **argv)
     cpu_drawer.my_cpu   = nes_cpu;
     cpu_drawer.renderer = renderer;
     cpu_drawer.font     = font;
+
+    nes_cpu -> write (0x4014, 0);
 
     quit = 0;
     while (!quit)
@@ -123,8 +132,8 @@ int main (int argc, char **argv)
         *last_coords = render_text (cpu_drawer, "STACK:", 16,last_coords -> y + last_coords -> h + 50,{0, 0, 0, 0});
         *last_coords = render_memory (cpu_drawer, 15,last_coords -> y + last_coords -> h,0x01E0, 2, false);
 
-        for (int i = 0; i < 89342; i++)
-            nes_ppu -> clock ();
+//        for (int i = 0; i < 89342; i++)
+//            nes_ppu -> clock ();
 
         SDL_RenderPresent(renderer);
     }

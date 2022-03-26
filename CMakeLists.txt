@@ -15,7 +15,10 @@ set (SOURCES
     src/devices/memories/ram.cpp
     src/devices/cartridges/cartridge.cpp
     src/devices/cartridges/read_ines.cpp
-    src/devices/ppu/ppu.cpp src/devices/memories/ppu_palette_ram.cpp src/devices/memories/ppu_nametable_ram.cpp)
+    src/devices/ppu/ppu.cpp
+    src/devices/memories/ppu_palette_ram.cpp
+    src/devices/memories/ppu_nametable_ram.cpp
+    src/devices/ppu/oam.cpp)
 
 set (INCLUDES
     include/bus/bus.h
@@ -29,7 +32,10 @@ set (INCLUDES
     include/devices/cartridges/cartridge.h
     include/devices/cartridges/exceptions/cartridge_exception.h
     include/devices/ppu/ppu.h
-    include/devices/ppu/exceptions/ppu_exception.h include/devices/memories/ppu_palette_ram.h include/devices/memories/ppu_nametable_ram.h)
+    include/devices/ppu/exceptions/ppu_exception.h
+    include/devices/memories/ppu_palette_ram.h
+    include/devices/memories/ppu_nametable_ram.h
+    include/devices/ppu/oam.h)
 
 set (TESTS
     testing/devices/cpu/6502/addressing_modes/addressing_modes.h
@@ -69,7 +75,9 @@ set (TESTS
 
     testing/devices/cpu/6502/instructions/shifts.h
     testing/devices/cpu/6502/instructions/shifts.cpp
-        testing/devices/cartridges/cartridge.h testing/devices/cartridges/cartridge.cpp)
+
+    testing/devices/cartridges/cartridge.h
+    testing/devices/cartridges/cartridge.cpp)
 
 add_executable (nemulator main.cpp ${SOURCES} ${INCLUDES})
 
