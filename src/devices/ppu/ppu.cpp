@@ -33,7 +33,7 @@ void    ppu::write (uint16_t address, uint8_t data, bool to_parent_bus) // NOLIN
                 this -> oam_address_register = data;
             case 0x0004:
                 this -> oam_data_register = data;
-                (this -> oam -> memory)[oam_address_register] = data;
+                (this -> oam -> dma())[oam_address_register] = data;
                 (this -> oam_address_register)++;
             case 0x0005: case 0x0006:
                 build_destination_address (data);
@@ -60,21 +60,22 @@ uint8_t ppu::read (uint16_t address, bool from_parent_bus) // NOLINT
         switch (address)
         {
             case 0x0000:
-                throw ppu_exception ("Tried to read from control register");
+//                throw ppu_exception ("PPU: Tried to read from control register");
+                return (this -> control_register);
             case 0x0001:
-                throw ppu_exception ("Tried to read from mask register");
+                throw ppu_exception ("PPU: Tried to read from mask register");
             case 0x0002:
                 return (this -> get_status_register ());
             case 0x0003:
                 return (this -> oam_address_register);
             case 0x0004:
-                this -> oam_data_register = (this -> oam -> memory)[this -> oam_address_register];
+                this -> oam_data_register = (this -> oam -> dma ())[this -> oam_address_register];
 
                 return (this -> oam_data_register);
             case 0x0005:
-                throw ppu_exception ("Tried to read from scroll register");
+                throw ppu_exception ("PPU: Tried to read from scroll register");
             case 0x0006:
-                throw ppu_exception ("Tried to read from address register");
+                throw ppu_exception ("PPU: Tried to read from address register");
             case 0x0007:
                 return get_data_register ();
             default:

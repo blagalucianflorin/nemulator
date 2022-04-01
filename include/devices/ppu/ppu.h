@@ -5,16 +5,16 @@
 #ifndef NEMULATOR_PPU_H
 #define NEMULATOR_PPU_H
 
+#include "include/forwards/classes.h"
+
 #include "include/devices/device.h"
 #include "include/devices/ppu/exceptions/ppu_exception.h"
 #include "include/bus/bus.h"
-#include "include/forwards/classes.h"
 #include "include/misc/macros.h"
 #include "include/devices/cpu/6502.h"
 #include "include/devices/ppu/oam.h"
 
 #include <SDL2/SDL.h>
-#include <random>
 
 class ppu : public device
 {
@@ -101,6 +101,8 @@ public:
     class oam *oam = nullptr;
 
 public:
+    ppu () : device (0x2000, 0x3FFF) {}
+
     explicit ppu (SDL_Renderer *renderer);
 
     void     reset ();
@@ -125,6 +127,8 @@ public:
     inline void attach (class cpu *new_cpu) { this -> cpu = new_cpu; }
 
     inline void attach (class oam *new_oam) { this -> oam = new_oam; }
+
+    inline void attach (SDL_Renderer *new_renderer) { this -> renderer = new_renderer; }
 };
 
 #endif //NEMULATOR_PPU_H

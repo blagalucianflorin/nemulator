@@ -2,9 +2,13 @@
 // Created by lblaga on 26.03.2022.
 //
 
+#include <iostream>
 #include "include/devices/ppu/oam.h"
 
-oam::oam () : device (0x4014, 0x4014) {} // NOLINT
+oam::oam () : device (0x4014, 0x4014)
+{
+    this -> memory = new uint8_t[256];
+}
 
 void oam::write (uint16_t address, uint8_t data, bool to_parent_bus) // NOLINT
 {
@@ -12,10 +16,13 @@ void oam::write (uint16_t address, uint8_t data, bool to_parent_bus) // NOLINT
 
     this -> cpu -> wait (this -> cpu -> get_cycles_elapsed () % 2 == 0 ? 513 : 514);
 
-    for (uint16_t i = this -> read (0x2003); i < 256; i++)
+    for (uint16_t i = this -> ppu -> read (0x2003); i < 256; i++)
     {
-        (this -> memory)[i] = this -> cpu -> read ((((uint16_t) data) << 8 & 0xFF00) + i);
-        this -> write (0x2004, (this -> memory)[i]);
+        if (this -> memory == nullptr)
+            throw ppu_exception ("OAM: Memory not initialized");
+
+        (this -> memory)[i] = this -> cpu -> read ((((data << 8) & 0xFF00) + i));
+        this -> cpu -> write (0x2004, (this -> memory)[i]);
     }
 }
 
