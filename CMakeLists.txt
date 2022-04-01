@@ -77,7 +77,10 @@ set (TESTS
     testing/devices/cpu/6502/instructions/shifts.cpp
 
     testing/devices/cartridges/cartridge.h
-    testing/devices/cartridges/cartridge.cpp)
+    testing/devices/cartridges/cartridge.cpp
+
+    testing/devices/ppu/ppu.h
+    testing/devices/ppu/ppu.cpp)
 
 add_executable (nemulator main.cpp ${SOURCES} ${INCLUDES})
 
