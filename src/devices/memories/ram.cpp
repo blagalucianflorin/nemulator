@@ -6,10 +6,10 @@
 
 void ram::write (uint16_t address, uint8_t data, bool to_parent_bus) // NOLINT
 {
-    memory::write(address & 0x08FF, data, to_parent_bus);
+    memory::write(address & 0x07FF, data, to_parent_bus);
 }
 
 uint8_t ram::read (uint16_t address, bool to_parent_bus) // NOLINT
 {
-    return memory::read(address & 0x08FF, to_parent_bus);
+    return memory::read(address & 0x07FF, to_parent_bus);
 }
