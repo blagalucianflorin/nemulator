@@ -5,15 +5,16 @@
 #ifndef NEMULATOR_PPU_H
 #define NEMULATOR_PPU_H
 
+#include "include/forwards/classes.h"
+
 #include "include/devices/device.h"
 #include "include/devices/ppu/exceptions/ppu_exception.h"
 #include "include/bus/bus.h"
-#include "include/forwards/classes.h"
 #include "include/misc/macros.h"
 #include "include/devices/cpu/6502.h"
+#include "include/devices/ppu/oam.h"
 
 #include <SDL2/SDL.h>
-#include <random>
 
 class ppu : public device
 {
@@ -33,8 +34,13 @@ public:
 
     uint8_t oam_dma_register     = 0x0000;
 
-    uint16_t destination_address          = 0x0000;
-    bool     destination_address_low_byte = true;
+    uint16_t destination_address = 0x0000;
+    /*
+     * Determines which byte of destination_address will be written next
+     * false: low byte
+     * true:  high byte
+     */
+    bool address_latch = false;
 
     enum CONTROL_FLAG
     {
@@ -72,7 +78,9 @@ public:
         F_VBLANK_STARTED       = 7
     };
 
-    void    set_destination_address (uint8_t data);
+    void    build_destination_address (uint8_t data);
+
+    void    build_scroll_register (uint8_t data);
 
     uint8_t get_data_register ();
 
@@ -80,22 +88,24 @@ public:
 
     void    clock ();
 
-    int     current_cycle = 0;
-    long    frames_rendered = 0;
-
-    int     scanline = 0;
-    int     scancolumn = 0;
-
-    uint8_t previous_data;
+    long    current_cycle = 0;
+    int     scanline      = 0;
+    int     dot           = 0;
+    uint8_t previous_data = 0x00;
 
     SDL_Renderer *renderer = nullptr;
     int          x_offset  = 0;
     int          y_offset  = 0;
 
     class cpu *cpu = nullptr;
+    class oam *oam = nullptr;
 
 public:
-    ppu (SDL_Renderer *renderer, class cpu *cpu, int x_offset = 0, int y_offset = 0);
+    ppu () : device (0x2000, 0x3FFF) {}
+
+    explicit ppu (SDL_Renderer *renderer);
+
+    void     reset ();
 
     void     write (uint16_t address, uint8_t data, bool to_parent_bus = true) override; // NOLINT
 
@@ -112,6 +122,13 @@ public:
     uint8_t  set_status_flag (STATUS_FLAG flag, uint8_t value);
 
     uint8_t  get_status_flag (STATUS_FLAG flag);
+
+
+    inline void attach (class cpu *new_cpu) { this -> cpu = new_cpu; }
+
+    inline void attach (class oam *new_oam) { this -> oam = new_oam; }
+
+    inline void attach (SDL_Renderer *new_renderer) { this -> renderer = new_renderer; }
 };
 
 #endif //NEMULATOR_PPU_H

@@ -5,12 +5,14 @@
 #include <iostream>
 #include "include/devices/ppu/ppu.h"
 
-ppu::ppu (SDL_Renderer *renderer, class cpu *cpu, int x_offset, int y_offset) : device (0x2000, 0x3FFF)
+ppu::ppu (SDL_Renderer *renderer) : device (0x2000, 0x3FFF)
 {
     this -> renderer = renderer;
-    this -> x_offset = x_offset;
-    this -> y_offset = y_offset;
-    this -> cpu      = cpu;
+}
+
+void    ppu::reset ()
+{
+    this -> current_cycle = 0;
 }
 
 void    ppu::write (uint16_t address, uint8_t data, bool to_parent_bus) // NOLINT
@@ -21,19 +23,20 @@ void    ppu::write (uint16_t address, uint8_t data, bool to_parent_bus) // NOLIN
 
         switch (address) {
             case 0x0000:
-                break;
+                if (current_cycle >= 30000)
+                    this -> control_register = data;
             case 0x0001:
-                break;
+                this -> mask_register = data;
             case 0x0002:
                 throw ppu_exception("Tried to write to status register");
             case 0x0003:
-                break;
+                this -> oam_address_register = data;
             case 0x0004:
-                break;
-            case 0x0005:
-                break;
-            case 0x0006:
-                set_destination_address (data);
+                this -> oam_data_register = data;
+                (this -> oam -> dma())[oam_address_register] = data;
+                (this -> oam_address_register)++;
+            case 0x0005: case 0x0006:
+                build_destination_address (data);
             case 0x0007:
                 this -> data_register    = data;
                 this -> address_register += (get_control_flag (F_ADDRESS_INCREMENT) == 1 ? 32 : 1);
@@ -49,33 +52,34 @@ uint8_t ppu::read (uint16_t address, bool from_parent_bus) // NOLINT
 {
     if (from_parent_bus)
     {
-        if (BETWEEN (0x2000, address, 0x3FFF)) {
-            address = (address - 0x2000) % 8;
-
-            switch (address) {
-                case 0x0000:
-                    throw ppu_exception("Tried to read from control register");
-                case 0x0001:
-                    throw ppu_exception("Tried to read from mask register");
-                case 0x0002:
-                    return (this ->get_status_register ());
-                case 0x0003:
-                    return (this->oam_address_register);
-                case 0x0004:
-                    return (this->oam_data_register);
-                case 0x0005:
-                    throw ppu_exception("Tried to read from scroll register");
-                case 0x0006:
-                    return (this -> address_register);
-                case 0x0007:
-                    return get_data_register ();
-                default:
-                    break;
-            }
-        }
-        else
-        {
+        if (!BETWEEN (0x2000, address, 0x3FFF))
             return ((this -> parent_bus) -> read (address));
+
+        address = (address - 0x2000) % 8;
+
+        switch (address)
+        {
+            case 0x0000:
+//                throw ppu_exception ("PPU: Tried to read from control register");
+                return (this -> control_register);
+            case 0x0001:
+                throw ppu_exception ("PPU: Tried to read from mask register");
+            case 0x0002:
+                return (this -> get_status_register ());
+            case 0x0003:
+                return (this -> oam_address_register);
+            case 0x0004:
+                this -> oam_data_register = (this -> oam -> dma ())[this -> oam_address_register];
+
+                return (this -> oam_data_register);
+            case 0x0005:
+                throw ppu_exception ("PPU: Tried to read from scroll register");
+            case 0x0006:
+                throw ppu_exception ("PPU: Tried to read from address register");
+            case 0x0007:
+                return get_data_register ();
+            default:
+                break;
         }
     }
     else
@@ -129,14 +133,24 @@ uint8_t ppu::get_status_flag (ppu::STATUS_FLAG flag)
     return (((this -> status_register) >> flag) & 1);
 }
 
-void    ppu::set_destination_address (uint8_t data)
+void    ppu::build_destination_address (uint8_t data)
 {
-    if (this -> destination_address_low_byte)
-        this -> destination_address  = data;
-    else
+    if (this -> address_latch)
         this -> destination_address = (this -> destination_address << 8) | data;
+    else
+        this -> destination_address  = data;
 
-    this -> destination_address_low_byte = !(this -> destination_address_low_byte);
+    this -> address_latch = !(this -> address_latch);
+}
+
+void    ppu::build_scroll_register (uint8_t data)
+{
+    if (this -> address_latch)
+        this -> destination_address = (this -> destination_address << 8) | data;
+    else
+        this -> destination_address  = data;
+
+    this -> address_latch = !(this -> address_latch);
 }
 
 uint8_t ppu::get_data_register ()
@@ -157,26 +171,23 @@ uint8_t ppu::get_status_register ()
     uint8_t result = ((this -> status_register & 0b11100000) | (this -> previous_data & 0b00011111));
 
     this -> set_status_flag (STATUS_FLAG::F_VBLANK_STARTED, 0);
+    this -> address_latch = true;
 
     return (result);
 }
 
 void    ppu::clock ()
 {
-    this -> current_cycle = (this -> current_cycle + 1) % 89342;
-    if (this -> current_cycle == 89340)
-        (this -> frames_rendered)++;
-
     // TODO draw a pixel
-    SDL_SetRenderDrawColor (this -> renderer, 0, 128, 0, 0);
-    if (this -> scancolumn <= 256 && this -> scanline <= 240)
-        SDL_RenderDrawPoint (this -> renderer, (this -> scancolumn) + (this -> x_offset),
-                             (this -> scanline) + (this -> y_offset));
+//    SDL_SetRenderDrawColor (this -> renderer, 0, 128, 0, 0);
+//    if (this -> dot <= 256 && this -> scanline <= 240)
+//        SDL_RenderDrawPoint (this -> renderer, (this -> dot) + (this -> x_offset),
+//                             (this -> scanline) + (this -> y_offset));
 
-    (this -> scancolumn)++;
-    if (this -> scancolumn == 341)
+    (this -> dot)++;
+    if (this -> dot == 341)
     {
-        this -> scancolumn = 0;
+        this -> dot = 0;
         (this -> scanline)++;
         if (this -> scanline == 262)
         {
