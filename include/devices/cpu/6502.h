@@ -22,16 +22,16 @@ private:
     uint16_t destination_address    = 0xFFFE;
 
     // Registers
-    uint8_t  flags_register  = 0b00000000;
+    uint8_t  flags_register  = 0x34;
     uint8_t  accumulator     = 0x00;
     uint8_t  x_register      = 0x00;
     uint8_t  y_register      = 0x00;
     uint16_t program_counter = 0x00;
-    uint8_t  stack_pointer   = 0xFF;
+    uint8_t  stack_pointer   = 0xFD;
 
     // Record cycles left for current operation
-    uint8_t  cycles_left    = 0;
-    int      cycles_elapsed = 0;
+    long     cycles_left    = 0;
+    long     cycles_elapsed = 0;
 
     // Operations
     struct  operation
@@ -90,6 +90,11 @@ private:
     uint8_t TSX (); uint8_t TXA (); uint8_t TXS (); uint8_t TYA ();
     uint8_t UNK (); // Unknown instruction
 
+    // Illegal instructions
+    uint8_t DOP (); uint8_t TOP (); uint8_t LAX (); uint8_t SAX ();
+    uint8_t DCP (); uint8_t ISC (); uint8_t SLO (); uint8_t RLA ();
+    uint8_t SRE (); uint8_t RRA ();
+
 public:
     cpu ();
 
@@ -104,6 +109,11 @@ public:
     void    step ();
 
     void    interrupt (bool force);
+
+    void    wait (long cycles);
+
+
+    inline long get_cycles_elapsed () { return (this -> cycles_elapsed); }
 };
 
 #endif //NEMULATOR_CPU_H
